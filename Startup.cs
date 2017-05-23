@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using SampleAPI.Models;
+using IdentityServer4.AccessTokenValidation;
 
 
 namespace SampleAPI
@@ -31,9 +33,21 @@ namespace SampleAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy=> 
+                {
+                policy.WithOrigins("http://localhost:5003")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+                });
+            }
+            );
             services.AddDbContext<TodoContext>(opt=> opt.UseInMemoryDatabase());
             // Add framework services.
-            services.AddMvc();
+            services.AddMvcCore()
+                    .AddAuthorization()
+                    .AddJsonFormatters();
 
             services.AddScoped<ITodoRepository, TodoRepository>();
         }
@@ -43,6 +57,14 @@ namespace SampleAPI
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
+
+            app.UseCors("default");
+
+            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions{
+                Authority = "http://localhost:5000",
+                AllowedScopes = { "sampleAPI" },
+                RequireHttpsMetadata = false,
+            });
 
             app.UseMvc();
         }
