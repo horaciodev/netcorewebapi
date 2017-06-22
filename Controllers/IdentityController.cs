@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace SampleAPI.Controllers
 {
     [Route("/api/v1/[controller]")]
-    [Authorize]
+    [Authorize(Roles="Clerk")]
     public class IdentityController: ControllerBase
     {
         [HttpGet]
