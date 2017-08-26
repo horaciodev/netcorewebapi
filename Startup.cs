@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using SampleAPI.Models;
+using SampleAPI.Repositories;
 using IdentityServer4.AccessTokenValidation;
 
 
@@ -33,6 +34,8 @@ namespace SampleAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var catalogSqlConnStr = Configuration.GetConnectionString("ProductCatalogDB");
+
             services.AddCors(options =>
             {
                 options.AddPolicy("default", policy=> 
@@ -50,6 +53,9 @@ namespace SampleAPI
                     .AddJsonFormatters();
 
             services.AddScoped<ITodoRepository, TodoRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>(svcProvider =>{
+                return new ProductRepository(catalogSqlConnStr);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
