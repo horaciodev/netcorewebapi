@@ -16,6 +16,6 @@ Usage: Exec [dbo].[uprocGetProductCategories];
 SELECT	a.ProductCategoryId,
 		A.CategoryDescr
 FROM [dbo].[ProductCategory] a
-ORDER BY 2
+ORDER BY CategoryDescr
 
 GO

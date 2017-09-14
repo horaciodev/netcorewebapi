@@ -56,6 +56,9 @@ namespace SampleAPI
             services.AddScoped<IProductRepository, ProductRepository>(svcProvider =>{
                 return new ProductRepository(catalogSqlConnStr);
             });
+            services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>(svcProvider =>{
+               return new ProductCategoryRepository(catalogSqlConnStr);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

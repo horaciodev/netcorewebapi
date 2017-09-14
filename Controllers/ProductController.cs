@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using SampleAPI.Models;
 using SampleAPI.Repositories;
+using SampleAPI.Utils;
 
 namespace SampleAPI.Controllers
 {
@@ -34,9 +35,28 @@ namespace SampleAPI.Controllers
             var product = _proudctRepository.GetProductById(id);
 
             if(product!=null)
-            return new OkObjectResult(product);
+                return new OkObjectResult(product);
 
             return new NotFoundObjectResult(id);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("multi/{ids}", Name="GetMultipleById")]
+        public IActionResult GetMultipleById(string ids)
+        {            
+            var prodIds = ValidationExtensions.ParseProductIdsFromString(ids);
+
+            if(prodIds == null)
+                return new BadRequestResult();
+
+            var products = _proudctRepository.GetMultipleByIds(prodIds);
+
+            if(products != null)
+                return new OkObjectResult(products);
+
+            return new NotFoundObjectResult(ids);
+
         }
     }
 }

@@ -7,6 +7,8 @@ namespace SampleAPI.Repositories
     {
         IList<ProductModel> GetProductsByCategory(int categoryId);
 
+        IList<ProductModel> GetMultipleByIds(int[] productIds);
+
         ProductModel GetProductById(int productId);        
     }
 }
