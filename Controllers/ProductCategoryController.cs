@@ -1,3 +1,4 @@
+using System;
 using SampleAPI.Repositories;
 
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +20,16 @@ namespace SampleAPI.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            try
+            {
             var productCategories = _productCategoryRepo.GetProductCategories();
-
+            
             return new OkObjectResult(productCategories);
+            }
+            catch(Exception e)
+            {                
+                return new ContentResult(){ Content = e.Message ?? "Naughty" , StatusCode = 500 };
+            }
         }
     }
 }
