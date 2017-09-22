@@ -5,7 +5,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Linq;
 
+using SampleAPI.DataUtils.Sql;
+using SampleAPI.DataUtils.MappingExtensions;
 using SampleAPI.Models;
 
 namespace SampleAPI.Repositories
@@ -13,7 +16,6 @@ namespace SampleAPI.Repositories
     public class ProductRepository : IProductRepository
     {
         private string _connStr;
-
         public ProductRepository(string connStr)
         {
             _connStr = connStr;
@@ -21,110 +23,44 @@ namespace SampleAPI.Repositories
 
         public IList<ProductModel> GetProductsByCategory(int categoryId)
         {
-            var productList = new List<ProductModel>();
+            var dataGrunt = new DataGrunt<ProductModel>(_connStr);
+            var productList = dataGrunt
+                                    .GetObjectListFromProc("uprocGetProductsByCategory",
+                                    new List<SqlParameter>(){ new SqlParameter("@ProductCategoryId",categoryId)},
+                                    ProductModelDataMapping.GetFromReader
+                                    );
 
-            using(var cn = new SqlConnection(_connStr))
-            {
-                using(var cmd = new SqlCommand("uprocGetProductsByCategory", cn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@ProductCategoryId", categoryId);
-
-                    cn.Open();
-                    using(var reader = cmd.ExecuteReader())
-                    {
-                        while(reader.Read())
-                        {
-                            var product = new ProductModel{
-                                ProductId = reader.GetInt32(0),
-                                ProductCategoryId = reader.GetInt32(1),
-                                CategoryDescr = reader.GetString(2),
-                                IsShippable = reader.GetBoolean(3),
-                                IsVisible = reader.GetBoolean(4),
-                                Price = reader.GetDecimal(5),
-                                ProductName = reader.GetString(6),
-                                ProductDescr = reader[7] == System.DBNull.Value ? string.Empty : reader.GetString(7)
-                            };
-
-                            productList.Add(product);
-                        }
-                    }
-                }
-            }
-
-            return productList;
+            return productList;                                    
         }
 
         public ProductModel GetProductById(int productId)
         {
-            ProductModel retProduct = null;
-            using(var cn = new SqlConnection(_connStr))
-            {
-                using(var cmd = new SqlCommand("uprocGetProductById", cn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@ProductId", productId);
+            var dataGrunt = new DataGrunt<ProductModel>(_connStr);
+            var productList = dataGrunt
+                                    .GetObjectListFromProc("uprocGetProductById",
+                                    new List<SqlParameter>(){ new SqlParameter("@ProductId",productId)},
+                                    ProductModelDataMapping.GetFromReader
+                                    );
 
-                    cn.Open();
-                    using(var reader = cmd.ExecuteReader())
-                    {
-                        if(reader.Read())
-                        {
-                            retProduct = new ProductModel{
-                                ProductId = reader.GetInt32(0),
-                                ProductCategoryId = reader.GetInt32(1),
-                                CategoryDescr = reader.GetString(2),
-                                IsShippable = reader.GetBoolean(3),
-                                IsVisible = reader.GetBoolean(4),
-                                Price = reader.GetDecimal(5),
-                                ProductName = reader.GetString(6),
-                                ProductDescr = reader[7] == System.DBNull.Value ? string.Empty : reader.GetString(7)
-                            };
+            if (!productList.Any()) return null;
 
-                        }
-                    }
-                }
-            }
-
-            return retProduct;
+            return productList[0];
         }
 
         public IList<ProductModel> GetMultipleByIds(int[] productIds)
         {
-            var productList = new List<ProductModel>();
+            var dataGrunt = new DataGrunt<ProductModel>(_connStr);
+            var dataTableParam = CreateSqlTableParam(productIds);
+            var sqlDataTableParam = new SqlParameter("@ProductIdsTable",dataTableParam);
+            sqlDataTableParam.SqlDbType = SqlDbType.Structured;
 
-            using(var cn = new SqlConnection(_connStr))
-            {
-                using(var cmd = new SqlCommand("uprocGetMultipleProductsById", cn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    var dataTableParam = CreateSqlTableParam(productIds);
-                    var tableSqlParam = cmd.Parameters.AddWithValue("@ProductIdsTable", dataTableParam);
-                    tableSqlParam.SqlDbType = SqlDbType.Structured;
+            var productList = dataGrunt
+                                    .GetObjectListFromProc("uprocGetMultipleProductsById",
+                                    new List<SqlParameter>(){ sqlDataTableParam},
+                                    ProductModelDataMapping.GetFromReader
+                                    );
 
-                    cn.Open();
-                    using(var reader = cmd.ExecuteReader())
-                    {
-                        while(reader.Read())
-                        {
-                            var product = new ProductModel{
-                                ProductId = reader.GetInt32(0),
-                                ProductCategoryId = reader.GetInt32(1),
-                                CategoryDescr = reader.GetString(2),
-                                IsShippable = reader.GetBoolean(3),
-                                IsVisible = reader.GetBoolean(4),
-                                Price = reader.GetDecimal(5),
-                                ProductName = reader.GetString(6),
-                                ProductDescr = reader[7] == System.DBNull.Value ? string.Empty : reader.GetString(7)
-                            };
-
-                            productList.Add(product);
-                        }
-                    }
-                }
-            }
-
-             return productList;
+            return productList;      
         }
 
         private static List<SqlDataRecord> CreateSqlTableParam(int[] ids)

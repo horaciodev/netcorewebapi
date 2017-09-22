@@ -29,6 +29,7 @@ namespace SampleAPI.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [Route("{id:int}",Name ="GetById")]        
         public IActionResult GetById(int id)
         {
@@ -41,7 +42,6 @@ namespace SampleAPI.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         [Route("multi/{ids}", Name="GetMultipleById")]
         public IActionResult GetMultipleById(string ids)
         {            
