@@ -36,11 +36,13 @@ namespace SampleAPI
         {
             var catalogSqlConnStr = Configuration.GetConnectionString("ProductCatalogDB");
 
+            var allowedCorsOrigin = Configuration["Cors:AllowedOrigin"];
+
             services.AddCors(options =>
             {
                 options.AddPolicy("default", policy=> 
                 {
-                policy.WithOrigins("http://localhost:5003")
+                policy.WithOrigins(allowedCorsOrigin)
                 .AllowAnyHeader()
                 .AllowAnyMethod();
                 });
@@ -69,8 +71,10 @@ namespace SampleAPI
 
             app.UseCors("default");
 
+            var authority = Configuration["OAuth2:Authority"];
+
             app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions{
-                Authority = "http://localhost:5000",
+                Authority = authority,
                 AllowedScopes = { "sampleAPI" },
                 RequireHttpsMetadata = false,
             });
